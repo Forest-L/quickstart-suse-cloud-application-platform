@@ -32,7 +32,8 @@ Metadata:
         - NumberOfAppNodes
         - NodeGroupName
         - NodeVolumeSize
-        - AdditionalEKSAdminArns
+        - AdditionalEKSAdminUserArn
+        - AdditionalEKSAdminRoleArn
     - Label:
         default: SUSE Cloud Application Platform configuration
       Parameters:
@@ -81,8 +82,10 @@ Metadata:
         default: Node group name
       NodeVolumeSize:
         default: Node volume size
-      AdditionalEKSAdminArns:
-        default: Additional EKS admin ARNs
+      AdditionalEKSAdminUserArn:
+        default: Additional EKS admin ARN (IAM user)
+      AdditionalEKSAdminRoleArn:
+        default: Additional EKS admin ARN (IAM role)
       LambdaZipsBucketName:
         default: Lambda zips bucket name
       HostedZoneID:
@@ -183,11 +186,14 @@ Parameters:
       that you set this value to a trusted IP range. If using NAT gateways in this VPC, the public IP addresses of
       the NAT gateways must be included in this list
     Type: CommaDelimitedList
-  AdditionalEKSAdminArns:
+  AdditionalEKSAdminUserArn:
     Default: ""
-    Description: "[OPTIONAL] A comma-separated list of IAM users/roles to be granted administrative access to the
-      Amazon EKS cluster."
-    Type: CommaDelimitedList
+    Description: "[OPTIONAL] IAM user Amazon Resource Name (ARN) to be granted admin access to the EKS cluster"
+    Type: String
+  AdditionalEKSAdminRoleArn:
+    Default: ""
+    Description: "[OPTIONAL] IAM role Amazon Resource Name (ARN) to be granted admin access to the EKS cluster"
+    Type: String
   NodeInstanceType:
     Default: m5.large
     AllowedValues:
@@ -412,7 +418,8 @@ Resources:
         LambdaZipsBucketName: !Ref LambdaZipsBucketName
         NodeInstanceType: !Ref NodeInstanceType
         RemoteAccessCIDR: !Select [0, !Ref RemoteAccessCIDRs]
-        AdditionalEKSAdminArns: !Join [ ",", !Ref AdditionalEKSAdminArns ]
+        AdditionalEKSAdminUserArn: !Ref AdditionalEKSAdminUserArn
+        AdditionalEKSAdminRoleArn: !Ref AdditionalEKSAdminRoleArn
         VPCID: !Ref VPCID
         KubernetesVersion: "1.15"
         BastionOS: SUSE-SLES-15-HVM
@@ -422,6 +429,7 @@ Resources:
           - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/bastion_bootstrap.sh'
           - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
             S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        EKSClusterLoggingTypes: "api,audit,authenticator,controllerManager,scheduler"
   CapStack:
     Type: AWS::CloudFormation::Stack
     Properties:

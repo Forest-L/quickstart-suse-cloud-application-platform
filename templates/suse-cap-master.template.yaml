@@ -44,7 +44,8 @@ Metadata:
           - NumberOfAppNodes
           - NodeGroupName
           - NodeVolumeSize
-          - AdditionalEKSAdminArns
+          - AdditionalEKSAdminUserArn
+          - AdditionalEKSAdminRoleArn
       - Label:
           default: SUSE Cloud Application Platform configuration
         Parameters:
@@ -153,6 +154,10 @@ Metadata:
         default: Number of CF USB replicas
       StratosWebConsole:
         default: Stratos web console
+      AdditionalEKSAdminUserArn:
+        default: Additional EKS admin ARN (IAM user)
+      AdditionalEKSAdminRoleArn:
+        default: Additional EKS admin ARN (IAM role)
 Parameters:
   AvailabilityZones:
     Description: The list of Availability Zones to use for the subnets in the VPC. The Quick Starts uses three
@@ -236,11 +241,14 @@ Parameters:
     Default: 10.0.0.0/16
     Description: The CIDR block for the VPC.
     Type: String
-  AdditionalEKSAdminArns:
+  AdditionalEKSAdminUserArn:
     Default: ""
-    Description: "[OPTIONAL] A comma-separated list of IAM users/roles to be granted administrative access to the
-      Amazon EKS cluster."
-    Type: CommaDelimitedList
+    Description: "[OPTIONAL] IAM user Amazon Resource Name (ARN) to be granted admin access to the EKS cluster"
+    Type: String
+  AdditionalEKSAdminRoleArn:
+    Default: ""
+    Description: "[OPTIONAL] IAM role Amazon Resource Name (ARN) to be granted admin access to the EKS cluster"
+    Type: String
   NodeInstanceType:
     Default: m5.large
     AllowedValues:
@@ -441,6 +449,8 @@ Conditions:
 Resources:
   VPCStack:
     Type: AWS::CloudFormation::Stack
+    Metadata:
+      cfn-lint: { config: { ignore_checks: [ W9901 ] } }
     Properties:
       TemplateURL: !Sub
         - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template'
@@ -463,6 +473,8 @@ Resources:
         VPCCIDR: !Ref 'VPCCIDR'
   EKSStack:
     Type: AWS::CloudFormation::Stack
+    Metadata:
+      cfn-lint: { config: { ignore_checks: [ W9901 ] } }
     Properties:
       TemplateURL: !Sub
         - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-amazon-eks/templates/amazon-eks.template.yaml'
@@ -485,7 +497,8 @@ Resources:
         LambdaZipsBucketName: !Ref LambdaZipsBucketName
         NodeInstanceType: !Ref NodeInstanceType
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
-        AdditionalEKSAdminArns: !Join [ ",", !Ref AdditionalEKSAdminArns ]
+        AdditionalEKSAdminUserArn: !Ref AdditionalEKSAdminUserArn
+        AdditionalEKSAdminRoleArn: !Ref AdditionalEKSAdminRoleArn
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         KubernetesVersion: "1.15"
         BastionOS: SUSE-SLES-15-HVM
@@ -495,8 +508,11 @@ Resources:
           - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}scripts/bastion_bootstrap.sh'
           - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
             S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        EKSClusterLoggingTypes: "api,audit,authenticator,controllerManager,scheduler"
   CapStack:
     Type: AWS::CloudFormation::Stack
+    Metadata:
+      cfn-lint: { config: { ignore_checks: [ W9901 ] } }
     Properties:
       TemplateURL: !Sub
         - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/suse-cap.template.yaml'
