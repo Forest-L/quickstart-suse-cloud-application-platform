@@ -110,8 +110,6 @@ Metadata:
         default: Node group name
       NodeVolumeSize:
         default: Node volume size
-      AdditionalEKSAdminArns:
-        default: Additional EKS admin ARNs
       LambdaZipsBucketName:
         default: Lambda zips bucket name
       HostedZoneID:
