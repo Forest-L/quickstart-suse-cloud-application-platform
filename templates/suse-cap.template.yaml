@@ -1,5 +1,8 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Deploys Suse Cloud Application Platform into an existing Kubernetes Cluster (qs-1p817shrd) 
+Description: Deploys Suse Cloud Application Platform into an existing Kubernetes Cluster (qs-1p817shrd)
+Metadata:
+  QSLint:
+    Exclusions: [W9002, W9003, W9004, W9006]
 Parameters:
   CleanupSecurityGroupDependenciesLambdaArn:
     Type: String
@@ -9,11 +12,6 @@ Parameters:
     Type: String
   KubeGetLambdaArn:
     Type: String
-  KubeConfigPath:
-    Type: String
-  KubeConfigKmsContext:
-    Type: String
-    Default: "EKSQuickStart"
   NodeInstanceProfile:
     Type: String
   HostedZoneID:
@@ -354,8 +352,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref KubeGetLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Namespace: uaa
       Name: 'svc/uaa-uaa-public'
       JsonPath: '{.status.loadBalancer.ingress[0].hostname}'
@@ -366,8 +363,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref KubeGetLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Namespace: stratos
       Name: !Sub 'svc/${StratosConsole}-ui-ext'
       JsonPath: '{.status.loadBalancer.ingress[0].hostname}'
@@ -377,8 +373,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref KubeGetLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Namespace: scf
       Name: 'svc/router-gorouter-public'
       JsonPath: '{.status.loadBalancer.ingress[0].hostname}'
@@ -388,8 +383,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref KubeGetLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Namespace: scf
       Name: 'svc/tcp-router-tcp-router-public'
       JsonPath: '{.status.loadBalancer.ingress[0].hostname}'
@@ -399,8 +393,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref KubeGetLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Namespace: scf
       Name: 'svc/diego-ssh-ssh-proxy-public'
       JsonPath: '{.status.loadBalancer.ingress[0].hostname}'
@@ -556,8 +549,7 @@ Resources:
     DependsOn: NodeGroupStack
     Properties:
       ServiceToken: !Ref KubeManifestLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Manifest:
         kind: Namespace
         apiVersion: v1
@@ -569,8 +561,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref HelmLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       ChartBucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       ChartKey: !Sub '${QSS3KeyPrefix}charts/uaa.tgz'
       Namespace: !GetAtt UaaNamespace.name
@@ -628,8 +619,7 @@ Resources:
     DependsOn: NodeGroupStack
     Properties:
       ServiceToken: !Ref KubeManifestLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Manifest:
         kind: Namespace
         apiVersion: v1
@@ -641,8 +631,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref KubeGetLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Namespace: uaa
       Name: 'pod'
       JsonPath: "{.items[?(.metadata.name=='uaa-0')].spec.containers[?(.name=='uaa')].env[?(.name=='INTERNAL_CA_CERT')].valueFrom.secretKeyRef.name}"
@@ -652,8 +641,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref KubeGetLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Namespace: uaa
       Name: !Sub 'secret/${UaaSecretName}'
       JsonPath: "{.data['internal-ca-cert']}"
@@ -671,8 +659,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref HelmLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       ChartBucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       ChartKey: !Sub '${QSS3KeyPrefix}charts/cf.tgz'
       Namespace: !GetAtt ScfNamespace.name
@@ -818,8 +805,7 @@ Resources:
     DependsOn: NodeGroupStack
     Properties:
       ServiceToken: !Ref KubeManifestLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Manifest:
         kind: Namespace
         apiVersion: v1
@@ -832,8 +818,7 @@ Resources:
     DependsOn: Scf
     Properties:
       ServiceToken: !Ref KubeManifestLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       Manifest:
         kind: StorageClass
         apiVersion: storage.k8s.io/v1
@@ -853,8 +838,7 @@ Resources:
     Version: '1.0'
     Properties:
       ServiceToken: !Ref HelmLambdaArn
-      KubeConfigPath: !Ref KubeConfigPath
-      KubeConfigKmsContext: !Ref KubeConfigKmsContext
+      ClusterName: !Ref EKSClusterName
       RepoUrl: https://kubernetes-charts.suse.com/
       Chart: suse/console
       Namespace: !GetAtt StratosConsoleNamespace.name

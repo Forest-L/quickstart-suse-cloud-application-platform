@@ -519,8 +519,6 @@ Resources:
       Parameters:
         KubeManifestLambdaArn: !GetAtt EKSStack.Outputs.KubeManifestLambdaArn
         KubeGetLambdaArn: !GetAtt EKSStack.Outputs.KubeGetLambdaArn
-        KubeConfigPath: !GetAtt EKSStack.Outputs.KubeConfigPath
-        KubeConfigKmsContext: "EKSQuickStart"
         ControlPlaneSecurityGroup: !GetAtt EKSStack.Outputs.ControlPlaneSecurityGroup
         EKSClusterName: !GetAtt EKSStack.Outputs.EKSClusterName
         NodeInstanceProfile: !GetAtt EKSStack.Outputs.NodeInstanceProfile
@@ -587,8 +585,6 @@ Resources:
       ServiceToken: !GetAtt 'EKSStack.Outputs.CleanupSecurityGroupDependenciesLambdaArn'
       SecurityGroups: [!GetAtt EKSStack.Outputs.NodeGroupSecurityGroup, !GetAtt EKSStack.Outputs.BastionSecurityGroup, !GetAtt CapStack.Outputs.NodeSecurityGroup]
 Outputs:
-  KubeConfigPath:
-    Value: !GetAtt EKSStack.Outputs.KubeConfigPath
   BastionIP:
     Value: !GetAtt EKSStack.Outputs.BastionIP
   UaaEndpoint:
